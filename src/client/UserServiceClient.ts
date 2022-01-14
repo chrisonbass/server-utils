@@ -5,8 +5,8 @@ interface UserServiceClientArgs {
   url: string,
   realm: string,
   client: string,
-  clientSecret: string | null | undefined,
-  hostName: string | null | undefined
+  clientSecret?: string | null | undefined,
+  hostName?: string | null | undefined 
 }
 
 interface UserRecord {
@@ -23,10 +23,10 @@ export default class UserServiceClient implements UserServiceClientArgs {
   url: string;
   realm: string;
   client: string;
-  clientSecret: string | null | undefined;
-  hostName: string | null | undefined;
+  clientSecret?: string | null | undefined;
+  hostName?: string | null | undefined;
 
-  constructor(args: UserServiceClient) {
+  constructor(args: UserServiceClientArgs) {
     const {url, realm, client, clientSecret, hostName} = args;
     this.url = url;
     this.realm = realm;
@@ -35,27 +35,34 @@ export default class UserServiceClient implements UserServiceClientArgs {
     this.hostName = hostName || null;
   }
 
+  parseToken(token: string) {
+    const tokenBody = Buffer.from(token.split(/\./)[1], 'base64').toString('utf8');
+    return JSON.parse(tokenBody);
+  }
+
   async checkToken(token: string): Promise<UserRecord | null> {
+    let parsedToken = this.parseToken(token);
     let userRecord: UserRecord | null = null;
     try {
+      const issuer = new URL(parsedToken.iss);
       const requestUrl = new URL(`${this.url}realms/${this.realm}/` +
         `protocol/openid-connect/userinfo`);
-      const hostName = this.hostName || requestUrl.hostname;
-      const request = await callApi(hostName.toString(), {
+      const hostName = issuer.hostname;
+      const request = await callApi(requestUrl.toString(), {
         headers: {
           "Host": hostName,
           "Authorization": `Bearer ${token}` 
         }
       });
-      if (request.ok) {
-        const requestJson = await request.json();
+      if (request && request.sub) { // .sub is the id in the response
         let temp: {[key: string] : any} = {};
-        Object.keys(requestJson).forEach((key: string) => {
-          temp[toCamelCase(key)] = requestJson[key];
+        Object.keys(request).forEach((key: string) => {
+          temp[toCamelCase(key)] = request[key];
         });
         userRecord = (temp as UserRecord);
       }
     } catch (e) {
+      console.error("Error checking user token\n", e, "\n");
       userRecord = null;
     }
     return userRecord;
