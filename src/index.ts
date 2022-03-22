@@ -4,6 +4,7 @@ import * as hash from './hash';
 import respondWithCode from "./responseWithCode";
 import toCamelCase from "./util/toCamelCase";
 import UserServiceClient from "./client/UserServiceClient";
+import SplunkLogger from "./client/SplunkLogger";
 
 export default {
   callApi,
@@ -14,6 +15,7 @@ export default {
     toCamelCase
   },
   client: {
-    UserServiceClient
+    UserServiceClient,
+    SplunkLogger
   }
 };

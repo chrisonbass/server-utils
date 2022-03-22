@@ -4,6 +4,7 @@ import * as hash from './hash';
 import respondWithCode from "./responseWithCode";
 import toCamelCase from "./util/toCamelCase";
 import UserServiceClient from "./client/UserServiceClient";
+import SplunkLogger from "./client/SplunkLogger";
 declare const _default: {
     callApi: typeof callApi;
     execCommand: typeof execCommand;
@@ -14,6 +15,7 @@ declare const _default: {
     };
     client: {
         UserServiceClient: typeof UserServiceClient;
+        SplunkLogger: typeof SplunkLogger;
     };
 };
 export default _default;
